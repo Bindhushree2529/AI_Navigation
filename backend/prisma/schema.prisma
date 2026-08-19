@@ -1,0 +1,190 @@
+// Prisma Schema — NaviAssist (SQLite)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./naviassist.db"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String?   @unique
+  phone        String?   @unique
+  name         String
+  avatarUrl    String?
+  role         String    @default("USER")
+  provider     String    @default("EMAIL")
+  passwordHash String?
+  isVerified   Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  lastSeenAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  settings          UserSettings?
+  sessions          NavigationSession[]
+  detections        Detection[]
+  sosEvents         SosEvent[]
+  caregiverLinks    CaregiverLink[]    @relation("UserCaregivers")
+  caregivingFor     CaregiverLink[]    @relation("CaregiverUsers")
+  emergencyContacts EmergencyContact[]
+  favoriteLocations FavoriteLocation[]
+  feedback          Feedback[]
+  auditLogs         AuditLog[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+model UserSettings {
+  id               String  @id @default(uuid())
+  userId           String  @unique
+  voiceLanguage    String  @default("en-US")
+  voiceSpeed       Float   @default(1.0)
+  voiceType        String  @default("female")
+  hapticIntensity  Int     @default(2)
+  highContrast     Boolean @default(false)
+  largeTouchTarget Boolean @default(true)
+  offlineMode      Boolean @default(false)
+  darkMode         Boolean @default(false)
+  announceCadence  Int     @default(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CaregiverLink {
+  id          String   @id @default(uuid())
+  userId      String
+  caregiverId String
+  isAccepted  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user      User @relation("UserCaregivers", fields: [userId], references: [id], onDelete: Cascade)
+  caregiver User @relation("CaregiverUsers", fields: [caregiverId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, caregiverId])
+}
+
+model EmergencyContact {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  phone     String
+  relation  String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NavigationSession {
+  id            String    @id @default(uuid())
+  userId        String
+  mode          String    @default("OUTDOOR")
+  startLocation String    // JSON string
+  endLocation   String?   // JSON string
+  destination   String?
+  distanceM     Float?
+  durationSec   Int?
+  routePolyline String?
+  isActive      Boolean   @default(true)
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  detections Detection[]
+  sosEvents  SosEvent[]
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([startedAt])
+}
+
+model FavoriteLocation {
+  id        String   @id @default(uuid())
+  userId    String
+  label     String
+  address   String
+  lat       Float
+  lng       Float
+  icon      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Detection {
+  id           String   @id @default(uuid())
+  userId       String
+  sessionId    String?
+  category     String
+  label        String
+  confidence   Float
+  distanceM    Float?
+  boundingBox  String?  // JSON string
+  imageUrl     String?
+  location     String?  // JSON string
+  spokenText   String?
+  modelName    String
+  modelVersion String
+  inferenceMs  Int
+  createdAt    DateTime @default(now())
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session NavigationSession? @relation(fields: [sessionId], references: [id])
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model SosEvent {
+  id         String    @id @default(uuid())
+  userId     String
+  sessionId  String?
+  status     String    @default("ACTIVE")
+  location   String    // JSON string
+  message    String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session NavigationSession? @relation(fields: [sessionId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String
+  rating    Int
+  comment   String?
+  feature   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  resource   String
+  resourceId String?
+  metadata   String?  // JSON string
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}

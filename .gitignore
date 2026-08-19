@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Mobile
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/ios/Pods/
+mobile/ios/build/
+mobile/.expo/
+
+# AI Models (large files)
+ai-engine/models/cache/
+*.pt
+*.onnx
+*.bin
+
+# Docker
+.dockerignore
+
+# Prisma
+backend/prisma/migrations/
+
+# SSL certs
+infra/nginx/ssl/
+NAVIASSIST.zip
+NAVIASSIST.zip
