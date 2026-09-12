@@ -127,3 +127,54 @@ export function speak(text: string, language = "en-US"): void {
 export function stopSpeaking(): void {
   Speech.stop();
 }
+
+// ── New tool execution helpers ────────────────────────────────────────────────
+
+export async function getWeather(lat: number, lng: number): Promise<string> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/weather/current?lat=${lat}&lng=${lng}`, {
+    headers: _authToken ? { Authorization: `Bearer ${_authToken}` } : {},
+  });
+  if (!res.ok) return "Weather information is currently unavailable.";
+  const d = await res.json();
+  const alerts = d.alerts?.join(" ") ?? "";
+  return `${d.condition}. Temperature ${d.temperatureC}°C. Wind ${d.windSpeedKmh} km/h. ${alerts} ${d.navigationAdvice}`.trim();
+}
+
+export async function getWeatherAdvice(lat: number, lng: number): Promise<string> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/weather/route-advice?lat=${lat}&lng=${lng}`, {
+    headers: _authToken ? { Authorization: `Bearer ${_authToken}` } : {},
+  });
+  if (!res.ok) return "Weather advice is currently unavailable.";
+  const d = await res.json();
+  return d.advice ?? "No weather advice available.";
+}
+
+export async function getIndoorRoute(destination: string, buildingId = "demo-building"): Promise<string> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/indoor/route`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(_authToken ? { Authorization: `Bearer ${_authToken}` } : {}),
+    },
+    body: JSON.stringify({ buildingId, destination, preferAccessible: true }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    return err.error ?? "Indoor route not found.";
+  }
+  const d = await res.json();
+  const steps = (d.steps as any[]).map((s: any, i: number) => `Step ${i + 1}: ${s.instruction}`).join(". ");
+  return `${d.summary} ${steps}`;
+}
+
+export function getBatteryStatus(batteryLevel: number | null, batteryMode: string, isCharging: boolean): string {
+  if (batteryLevel === null) return "Battery information is unavailable.";
+  const chargeStr = isCharging ? "Charging." : "";
+  return `Battery is at ${batteryLevel}%. Mode: ${batteryMode}. ${chargeStr}`.trim();
+}
+
+export function getConnectivityStatus(isOnline: boolean): string {
+  return isOnline
+    ? "Internet connection is active."
+    : "No internet connection. Basic navigation assistance is active.";
+}

@@ -3,14 +3,27 @@
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/services/api";
+import { speak } from "@/utils/speak";
+import { setLanguage, type AppLanguage } from "@/utils/speak";
 import { Loader2, Save } from "lucide-react";
+
+const LANGUAGES: { value: string; label: string }[] = [
+  { value: "en-IN", label: "English (India)" },
+  { value: "en-US", label: "English (US)" },
+  { value: "kn-IN", label: "ಕನ್ನಡ — Kannada" },
+  { value: "hi-IN", label: "हिन्दी — Hindi" },
+  { value: "te-IN", label: "తెలుగు — Telugu" },
+  { value: "ta-IN", label: "தமிழ் — Tamil" },
+  { value: "ml-IN", label: "മലയാളം — Malayalam" },
+  { value: "bn-IN", label: "বাংলা — Bengali" },
+];
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState({
-    voiceLanguage: "en-US",
+    voiceLanguage: "en-IN",
     voiceSpeed: 1.0,
     voiceType: "female",
     hapticIntensity: 2,
@@ -19,11 +32,17 @@ export default function SettingsPage() {
     offlineMode: false,
     darkMode: false,
     announceCadence: 3,
+    batteryMode: "normal",
+    preferAccessible: true,
   });
 
   function update(key: string, value: any) {
     setSettings(s => ({ ...s, [key]: value }));
     setSaved(false);
+    if (key === "voiceLanguage") {
+      setLanguage(value as AppLanguage);
+      speak("Language changed.", value);
+    }
   }
 
   async function save() {
@@ -31,6 +50,7 @@ export default function SettingsPage() {
     try {
       await api.patch("/users/settings", settings);
       setSaved(true);
+      speak("Settings saved.", settings.voiceLanguage);
     } catch {}
     finally { setSaving(false); }
   }
@@ -42,14 +62,15 @@ export default function SettingsPage() {
         <p className="text-muted-foreground mt-1">Customize your NaviAssist experience</p>
       </div>
 
+      {/* Voice */}
       <div className="card space-y-5">
-        <h2 className="font-semibold">Voice</h2>
+        <h2 className="font-semibold">🎤 Voice & Language</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Language</label>
             <select value={settings.voiceLanguage} onChange={e => update("voiceLanguage", e.target.value)}
               className="w-full rounded-xl border px-4 py-3 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-brand-500">
-              {["en-US", "en-GB", "hi-IN", "ar-SA", "fr-FR", "es-ES", "de-DE", "zh-CN"].map(l => <option key={l} value={l}>{l}</option>)}
+              {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
             </select>
           </div>
           <div>
@@ -76,13 +97,33 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Battery */}
       <div className="card space-y-4">
-        <h2 className="font-semibold">Accessibility</h2>
+        <h2 className="font-semibold">🔋 Battery Mode</h2>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { value: "normal", label: "Normal", desc: "Full AI features" },
+            { value: "saver", label: "Saver", desc: "Reduced processing" },
+            { value: "critical", label: "Critical", desc: "Emergency only" },
+          ].map(m => (
+            <button key={m.value} onClick={() => update("batteryMode", m.value)}
+              className={`rounded-xl border p-3 text-left transition-colors ${settings.batteryMode === m.value ? "border-brand-600 bg-brand-50 dark:bg-brand-950/30" : "hover:bg-surface"}`}>
+              <p className="text-sm font-semibold capitalize">{m.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{m.desc}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Accessibility */}
+      <div className="card space-y-4">
+        <h2 className="font-semibold">♿ Accessibility</h2>
         {[
           { key: "highContrast", label: "High Contrast Mode" },
           { key: "largeTouchTarget", label: "Large Touch Targets" },
-          { key: "offlineMode", label: "Offline Mode" },
+          { key: "offlineMode", label: "Offline / Basic Mode" },
           { key: "darkMode", label: "Dark Mode" },
+          { key: "preferAccessible", label: "Prefer Accessible Routes (elevator over stairs)" },
         ].map(({ key, label }) => (
           <div key={key} className="flex items-center justify-between">
             <span className="text-sm font-medium">{label}</span>

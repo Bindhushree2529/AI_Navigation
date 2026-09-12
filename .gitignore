@@ -1,27 +1,40 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-
-# Build outputs
-dist/
-.next/
-out/
-build/
-*.egg-info/
+# Python
+**/.venv/
+venv/
 __pycache__/
 *.pyc
 *.pyo
-.pytest_cache/
+*.pyd
+
+# Node
+node_modules/
+dist/
+build/
+
+# Next.js
+.next/
+*.tsbuildinfo
 
 # Environment
 .env
 .env.local
 .env.*.local
 
-# Logs
+# AI Models (large binary files)
+ai-engine/models/cache/
+*.pt
+*.bin
+*.safetensors
+*.onnx
+
+# Logs & temp
 *.log
-npm-debug.log*
+server_out.txt
+server_err.txt
+
+# Large archives
+*.zip
+*.tar.gz
 
 # OS
 .DS_Store
@@ -30,28 +43,15 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-*.swp
 
-# Mobile
-mobile/android/.gradle/
-mobile/android/app/build/
-mobile/ios/Pods/
-mobile/ios/build/
+# Expo
 mobile/.expo/
+mobile/android/
+mobile/ios/
 
-# AI Models (large files)
-ai-engine/models/cache/
-*.pt
-*.onnx
-*.bin
+# Prisma SQLite (dev only, don't commit)
+backend/prisma/*.db
+backend/prisma/*.db-journal
 
-# Docker
-.dockerignore
-
-# Prisma
-backend/prisma/migrations/
-
-# SSL certs
-infra/nginx/ssl/
-NAVIASSIST.zip
-NAVIASSIST.zip
+# GitHub Actions
+.github/

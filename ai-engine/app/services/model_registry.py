@@ -18,11 +18,17 @@ class ModelRegistry:
 
     @classmethod
     async def _load_yolo(cls):
-        from ultralytics import YOLO
-        loop = asyncio.get_event_loop()
-        model = await loop.run_in_executor(None, lambda: YOLO(settings.YOLO_MODEL))
-        cls._models["yolo"] = model
-        print(f"✅ YOLO loaded: {settings.YOLO_MODEL}")
+        try:
+            from ultralytics import YOLO
+            import os
+            loop = asyncio.get_event_loop()
+            model_path = os.path.join(os.path.dirname(__file__), "..", "..", settings.YOLO_MODEL)
+            model_path = os.path.abspath(model_path)
+            model = await loop.run_in_executor(None, lambda: YOLO(model_path))
+            cls._models["yolo"] = model
+            print(f"✅ YOLO loaded: {model_path}")
+        except Exception as e:
+            print(f"⚠️  YOLO model skipped: {e}")
 
     @classmethod
     async def _load_depth(cls):

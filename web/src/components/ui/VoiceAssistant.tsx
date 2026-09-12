@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Mic, MicOff, Volume2, X, MessageCircle } from "lucide-react";
-import { speak } from "@/utils/speak";
+import { speak, stopSpeaking, setLanguage, getLanguage, type AppLanguage } from "@/utils/speak";
 import { stopFlow } from "@/utils/voiceFlow";
 import { voiceCommandBus, setVoiceCommandDebug } from "@/utils/voiceCommandBus";
 
@@ -443,6 +443,28 @@ export function VoiceAssistant() {
       if (data.tool === "triggerSOS") voiceCommandBus.dispatch("sos", "");
       if (data.tool === "stopNavigation") voiceCommandBus.dispatch("stop_navigation", "");
       if (data.tool === "getNavigationStatus") router.push("/dashboard/navigation");
+      // New tools
+      if (data.tool === "detectTrafficLight" || data.tool === "detectZebraCrossing" ||
+          data.tool === "detectVehicles" || data.tool === "detectPedestrians" ||
+          data.tool === "detectStopSign" || data.tool === "analyzeRoadSafety") {
+        router.push("/demo");
+        voiceCommandBus.dispatch("road_safety", "");
+      }
+      if (data.tool === "findIndoorRoute") {
+        const dest = (data as any).toolArgs?.destination ?? transcript;
+        voiceCommandBus.dispatch("indoor_route", dest);
+      }
+      if (data.tool === "getWeather" || data.tool === "getWeatherAdvice") {
+        voiceCommandBus.dispatch("get_weather", "");
+      }
+      if (data.tool === "setLanguage") {
+        const lang = (data as any).toolArgs?.language ?? "en-IN";
+        setLanguage(lang as AppLanguage);
+      }
+      if (data.tool === "getBatteryStatus" || data.tool === "enableBatterySaver" ||
+          data.tool === "getConnectivityStatus" || data.tool === "enableBasicMode") {
+        voiceCommandBus.dispatch("device_status", data.tool);
+      }
       say(response, data.language);
     } catch (err: any) {
       say(err.message || "I could not process that. Please try again.");

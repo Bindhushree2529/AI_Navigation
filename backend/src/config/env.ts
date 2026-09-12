@@ -6,6 +6,7 @@ const schema = z.object({
   PORT: z.coerce.number().default(3001),
   JWT_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
+  GROQ_API_KEY: z.string().optional(),
   AI_ENGINE_URL: z.string().url().default("http://localhost:8001"),
   ALLOWED_ORIGINS: z.string().default("http://localhost:3000"),
   GROQ_API_KEY: z.string().min(1),

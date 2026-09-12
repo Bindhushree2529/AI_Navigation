@@ -51,6 +51,8 @@ model UserSettings {
   offlineMode      Boolean @default(false)
   darkMode         Boolean @default(false)
   announceCadence  Int     @default(3)
+  batteryMode      String  @default("normal")
+  preferAccessible Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

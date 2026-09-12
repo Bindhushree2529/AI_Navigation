@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { SystemStatusBar } from "@/components/ui/SystemStatusBar";
 import { Eye, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
@@ -41,6 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
       </header>
+      <SystemStatusBar />
       <main className="max-w-7xl mx-auto px-4 py-8">
         {children}
       </main>

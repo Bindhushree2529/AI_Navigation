@@ -90,3 +90,29 @@ function getStoredToken(): string | null {
     return null;
   }
 }
+
+export async function analyzeTraffic(imagePath: string): Promise<any> {
+  const { offlineMode } = useSettingsStore.getState();
+  if (offlineMode) return { error: "Traffic analysis requires internet connection." };
+  const formData = new FormData();
+  formData.append("file", { uri: imagePath, type: "image/jpeg", name: "frame.jpg" } as any);
+  const token = getStoredToken();
+  const { data } = await axios.post(`${API_URL}/detections/traffic`, formData, {
+    headers: { "Content-Type": "multipart/form-data", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    timeout: 15000,
+  });
+  return data;
+}
+
+export async function analyzeRoadSafety(imagePath: string): Promise<any> {
+  const { offlineMode } = useSettingsStore.getState();
+  if (offlineMode) return { error: "Road safety analysis requires internet connection." };
+  const formData = new FormData();
+  formData.append("file", { uri: imagePath, type: "image/jpeg", name: "frame.jpg" } as any);
+  const token = getStoredToken();
+  const { data } = await axios.post(`${API_URL}/detections/road-safety`, formData, {
+    headers: { "Content-Type": "multipart/form-data", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    timeout: 15000,
+  });
+  return data;
+}

@@ -17,6 +17,8 @@ import { sosRoutes } from "./routes/sos";
 import { caregiverRoutes } from "./routes/caregiver";
 import { adminRoutes } from "./routes/admin";
 import { voiceRoutes } from "./routes/voice";
+import { weatherRoutes } from "./routes/weather";
+import { indoorRoutes } from "./routes/indoor";
 import { wsRoutes } from "./websocket/handler";
 import { errorHandler } from "./middleware/errorHandler";
 import { auditMiddleware } from "./middleware/audit";
@@ -58,6 +60,8 @@ async function bootstrap() {
   await app.register(caregiverRoutes, { prefix: "/api/v1/caregiver" });
   await app.register(adminRoutes, { prefix: "/api/v1/admin" });
   await app.register(voiceRoutes, { prefix: "/api/v1/voice" });
+  await app.register(weatherRoutes, { prefix: "/api/v1/weather" });
+  await app.register(indoorRoutes, { prefix: "/api/v1/indoor" });
   await app.register(wsRoutes);
 
   app.get("/health", async () => ({ status: "ok", timestamp: new Date().toISOString() }));

@@ -1,13 +1,18 @@
 from __future__ import annotations
+import re
 import base64
-import asyncio
 import httpx
 from PIL import Image
 from io import BytesIO
 from app.config import settings
 
-VISION_MODEL = "qwen/qwen3.6-27b"
+VISION_MODEL = "qwen/qwen3.6-27b"  # no vision support on this account — falls back to text
+TEXT_MODEL = "qwen/qwen3.6-27b"
 GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+
+def _strip_think(text: str) -> str:
+    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
 
 SCENE_PROMPT = """You are a navigation assistant for a visually impaired person.
 Look at this image very carefully and describe what you see.
@@ -60,6 +65,22 @@ async def _groq_vision(image: Image.Image, prompt: str) -> str:
         return res.json()["choices"][0]["message"]["content"].strip()
 
 
+async def _groq_text(prompt: str) -> str:
+    async with httpx.AsyncClient(timeout=30) as client:
+        res = await client.post(
+            GROQ_CHAT_URL,
+            json={
+                "model": TEXT_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3,
+                "max_tokens": 256,
+            },
+            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
+        )
+        res.raise_for_status()
+        return _strip_think(res.json()["choices"][0]["message"]["content"])
+
+
 async def describe_scene(image: Image.Image) -> str:
     try:
         return await _groq_vision(image, SCENE_PROMPT)
@@ -70,8 +91,8 @@ async def describe_scene(image: Image.Image) -> str:
 async def visual_qa(image: Image.Image, question: str) -> str:
     try:
         return await _groq_vision(image, f"{QA_PROMPT}\n\nQuestion: {question}")
-    except Exception as e:
-        return f"Could not analyse image: {e}"
+    except Exception:
+        return await _fallback_qa(image)
 
 
 async def _fallback_description(image: Image.Image) -> str:
@@ -80,5 +101,25 @@ async def _fallback_description(image: Image.Image) -> str:
     detections = result.get("detections", [])
     if not detections:
         return "No objects detected. Path appears clear."
-    labels = [d["spokenText"] for d in detections[:3]]
-    return ". ".join(labels) + "."
+    labels = ", ".join(d["label"] for d in detections[:6])
+    try:
+        return await _groq_text(
+            f"You are a navigation assistant for a visually impaired person. "
+            f"Objects detected: {labels}. Give a concise 1-2 sentence safety description. "
+            f"Start with the most critical hazard. Reply with the description only, no thinking."
+        )
+    except Exception:
+        return ". ".join(d["spokenText"] for d in detections[:3]) + "."
+
+
+async def _fallback_qa(image: Image.Image) -> str:
+    from app.pipelines.detection import run_detection
+    result = await run_detection(image)
+    detections = result.get("detections", [])
+    labels = ", ".join(d["label"] for d in detections[:6]) or "nothing"
+    try:
+        return await _groq_text(
+            f"Detected objects: {labels}. Describe the scene concisely for a visually impaired person. Reply only, no thinking."
+        )
+    except Exception:
+        return ". ".join(d["spokenText"] for d in detections[:3]) + "."

@@ -1,5 +1,4 @@
 // Single global voice flow — only one listener active at a time
-import { abortListen } from "@/utils/listen";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -8,7 +7,6 @@ let isFlowActive = false;
 export function isFlowRunning() { return isFlowActive; }
 export function stopFlow() {
   isFlowActive = false;
-  abortListen();
   if (typeof window !== "undefined") window.speechSynthesis.cancel();
 }
 

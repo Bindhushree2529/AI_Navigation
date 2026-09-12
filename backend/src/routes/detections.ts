@@ -77,6 +77,21 @@ export async function detectionRoutes(app: FastifyInstance) {
     return { answer };
   });
 
+  // Traffic & road safety analysis
+  app.post("/traffic", async (req, reply) => {
+    const data = await req.file();
+    if (!data) return reply.status(400).send({ error: "Image required" });
+    const buffer = await data.toBuffer();
+    return aiClient.analyzeTraffic(buffer);
+  });
+
+  app.post("/road-safety", async (req, reply) => {
+    const data = await req.file();
+    if (!data) return reply.status(400).send({ error: "Image required" });
+    const buffer = await data.toBuffer();
+    return aiClient.analyzeRoadSafety(buffer);
+  });
+
   // Detection history
   app.get("/history", async (req) => {
     const userId = (req as any).userId as string;

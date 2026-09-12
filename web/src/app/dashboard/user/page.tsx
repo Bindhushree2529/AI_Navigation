@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Eye, MapPin, Settings, LogOut, Phone, Plus, Trash2, Loader2, CheckCircle, FileText, DollarSign, Radio } from "lucide-react";
+import { Eye, MapPin, Settings, LogOut, Phone, Plus, Trash2, Loader2, CheckCircle, FileText, DollarSign, Radio, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { speak } from "@/utils/speak";
 import { api } from "@/services/api";
@@ -133,6 +133,7 @@ export default function UserDashboardPage() {
     { icon: MapPin, label: "Navigation", desc: "Walking directions to destination", href: "/dashboard/navigation", color: "text-green-500" },
     { icon: FileText, label: "Read Text (OCR)", desc: "Read text from camera", href: "/demo", color: "text-orange-500" },
     { icon: DollarSign, label: "Currency", desc: "Identify currency notes", href: "/demo", color: "text-yellow-500" },
+    { icon: Sparkles, label: "AI Features", desc: "Traffic · Indoor · Weather", href: "/dashboard/ai-features", color: "text-purple-500" },
   ];
 
   return (
